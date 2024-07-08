@@ -18,6 +18,7 @@ export class AuthService {
     httpOnly: true,
     domain: 'localhost', //  (dev/prod)
     secure: true,
+    // secure: false,
     sameSite: 'none' as 'none', // lax in prod
   };
 
@@ -77,9 +78,9 @@ export class AuthService {
   }
 
   addRefreshTokenToResponse(res: Response, refreshToken: string) {
-    const expiresIn = new Date(
-      new Date().getTime() + this.EXPIRE_DAY_REFRESH_TOKEN,
-    );
+    const expiresIn = new Date();
+    expiresIn.setDate(expiresIn.getDate() + this.EXPIRE_DAY_REFRESH_TOKEN);
+
     res.cookie(this.REFRESH_TOKEN_NAME, refreshToken, {
       ...this.COOKIE_OPTIONS,
       expires: expiresIn,
