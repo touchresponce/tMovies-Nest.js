@@ -16,10 +16,9 @@ export class AuthService {
   REFRESH_TOKEN_NAME = 'refreshToken';
   COOKIE_OPTIONS = {
     httpOnly: true,
-    domain: 'localhost', //  (dev/prod)
+    domain: 'localhost',
     secure: true,
-    // secure: false,
-    sameSite: 'none' as 'none', // lax in prod
+    sameSite: 'none' as 'none',
   };
 
   constructor(
@@ -28,37 +27,38 @@ export class AuthService {
   ) {}
 
   async login(dto: AuthDto) {
-    const user = await this.validateUser(dto);
+    const { password, ...user } = await this.validateUser(dto);
     const tokens = this.issueTokens(user.id);
-    return { ...user, ...tokens };
+
+    return { user, ...tokens };
   }
 
   async register(dto: AuthDto) {
     const oldUser = await this.userService.getByEmail(dto.email);
-    if (oldUser) {
-      throw new BadRequestException('Email уже зарегистрирован.');
-    }
-    const user = await this.userService.create(dto);
+
+    if (oldUser) throw new BadRequestException('Email уже зарегестрирован.');
+
+    const { password, ...user } = await this.userService.create(dto);
     const tokens = this.issueTokens(user.id);
-    return { ...user, ...tokens };
+
+    return { user, ...tokens };
   }
 
-  private issueTokens(userId: number) {
+  private issueTokens(userId: string) {
     const data = { id: userId };
     const accessToken = this.jwt.sign(data, { expiresIn: '1h' });
-    const refreshToken = this.jwt.sign(data, { expiresIn: '1d' });
+    const refreshToken = this.jwt.sign(data, { expiresIn: '7d' });
     return { accessToken, refreshToken };
   }
 
   private async validateUser(dto: AuthDto) {
     const user = await this.userService.getByEmail(dto.email);
-    if (!user) {
-      throw new NotFoundException('Пользователь не найден.');
-    }
+    if (!user) throw new NotFoundException('Пользователь не найден.');
+
     const isValid = await verify(user.password, dto.password);
-    if (!isValid) {
-      throw new UnauthorizedException('Неправильный пароль.');
-    }
+
+    if (!isValid) throw new UnauthorizedException('Неправильный пароль.');
+
     return user;
   }
 
@@ -68,13 +68,9 @@ export class AuthService {
     if (!result) throw new UnauthorizedException('Invalid refresh token');
 
     const { password, ...user } = await this.userService.getById(result.id);
-
     const tokens = this.issueTokens(user.id);
 
-    return {
-      user,
-      ...tokens,
-    };
+    return { user, ...tokens };
   }
 
   addRefreshTokenToResponse(res: Response, refreshToken: string) {

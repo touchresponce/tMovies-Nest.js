@@ -8,7 +8,7 @@ import { UserDto } from './dto/user.dto';
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
-  getById(id: number) {
+  getById(id: string) {
     return this.prisma.user.findUnique({
       where: { id },
     });
@@ -31,7 +31,7 @@ export class UserService {
     });
   }
 
-  async update(id: number, dto: UserDto) {
+  async update(id: string, dto: UserDto) {
     let data = dto;
 
     if (dto.password) {
@@ -39,17 +39,96 @@ export class UserService {
     }
 
     return this.prisma.user.update({
-      where: {
-        id,
-      },
+      where: { id },
       data,
     });
   }
 
-  async getProfile(id: number) {
-    // const profile = await this.getById(id);
-    return this.prisma.user.findUnique({
-      where: { id },
+  async saveMovie(userId: string, movieId: number) {
+    // Проверяем, существует ли уже фильм
+    let movie = await this.prisma.movie.findUnique({
+      where: { id: movieId },
     });
+
+    if (!movie) {
+      // Если фильма нет, создаем новый
+      movie = await this.prisma.movie.create({
+        data: { id: movieId },
+      });
+    }
+
+    // Пытаемся найти существующую связь между пользователем и фильмом
+    const existingUserMovie = await this.prisma.userMovie.findUnique({
+      where: {
+        userId_movieId: { userId: userId, movieId: movie.id },
+      },
+    });
+
+    // Если связь не найдена, создаем новую
+    if (!existingUserMovie) {
+      await this.prisma.userMovie.create({
+        data: {
+          userId: userId,
+          movieId: movie.id,
+        },
+      });
+    }
+
+    const updatedUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        savedMovies: {
+          orderBy: {
+            createdAt: 'desc',
+          },
+          include: {
+            movie: true,
+          },
+        },
+      },
+    });
+
+    return updatedUser;
+  }
+
+  async deleteMovie(userId: string, movieId: number) {
+    await this.prisma.userMovie.delete({
+      where: {
+        userId_movieId: { userId: userId, movieId: movieId },
+      },
+    });
+
+    const updatedUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        savedMovies: {
+          orderBy: {
+            createdAt: 'desc',
+          },
+          include: {
+            movie: true,
+          },
+        },
+      },
+    });
+
+    return updatedUser;
+  }
+
+  async getProfile(id: string) {
+    const profile = await this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        savedMovies: {
+          orderBy: {
+            createdAt: 'desc',
+          },
+          include: {
+            movie: true,
+          },
+        },
+      },
+    });
+    return profile;
   }
 }

@@ -8,34 +8,29 @@ datasource db {
 }
 
 model User {
-  id          Int       @id @default(autoincrement())
-  email       String    @unique
+  id          String         @id @default(uuid())
+  email       String         @unique
   password    String
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
-  History     History[]
-  savedMovies Movie[]   @relation("savedMovies")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+  savedMovies UserMovie[]
 }
 
 model Movie {
-  id          Int       @id @default(autoincrement())
-  title       String
-  description String
-  releaseDate DateTime @map("release_date")
-  duration    Int
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
-  History     History[]
-  savedBy     User[]    @relation("savedMovies") 
+  id          Int            @id @default(autoincrement())
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+  savedBy     UserMovie[]
 }
 
-model History {
-  id        Int      @id @default(autoincrement())
-  userId    Int      @map("user_id")
-  movieId   Int      @map("movie_id")
-  viewedAt  DateTime @default(now()) @map("viewed_at")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  Movie     Movie    @relation(fields: [movieId], references: [id])
-  User      User     @relation(fields: [userId], references: [id])
+// Промежуточная модель для связи пользователей и фильмов
+model UserMovie {
+  user        User           @relation(fields: [userId], references: [id])
+  userId      String
+  movie       Movie          @relation(fields: [movieId], references: [id])
+  movieId     Int
+  createdAt   DateTime       @default(now()) // Дата добавления фильма пользователем
+
+  @@id([userId, movieId])
 }
+

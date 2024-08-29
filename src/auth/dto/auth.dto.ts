@@ -3,7 +3,12 @@ import { IsEmail, IsString, MinLength } from 'class-validator';
 const pasLength = 6;
 
 export class AuthDto {
-  @IsEmail()
+  @IsEmail(
+    {},
+    {
+      message: 'Некорректный Email.',
+    },
+  )
   email: string;
 
   @IsString({
