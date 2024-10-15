@@ -10,7 +10,10 @@ async function bootstrap() {
   app.use(cookieParser());
 
   app.enableCors({
-    origin: NODE_ENV === 'production' ? PROD_CORS_ORIGIN : DEV_CORS_ORIGIN,
+    origin:
+      NODE_ENV === 'production'
+        ? PROD_CORS_ORIGIN
+        : [DEV_CORS_ORIGIN, 'http://localhost:8081'],
     credentials: true,
     exposedHeaders: 'set-cookie',
   });

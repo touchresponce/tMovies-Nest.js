@@ -22,9 +22,10 @@ export class AuthController {
   @HttpCode(200)
   @Post('signin')
   async login(@Body() dto: AuthDto, @Res({ passthrough: true }) res: Response) {
-    const { refreshToken, ...responce } = await this.authService.login(dto);
+    const { refreshToken, ...response } = await this.authService.login(dto);
     this.authService.addRefreshTokenToResponse(res, refreshToken);
-    return responce;
+
+    return { refreshToken, ...response };
   }
 
   //
@@ -35,9 +36,9 @@ export class AuthController {
     @Body() dto: AuthDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { refreshToken, ...responce } = await this.authService.register(dto);
+    const { refreshToken, ...response } = await this.authService.register(dto);
     this.authService.addRefreshTokenToResponse(res, refreshToken);
-    return responce;
+    return response;
   }
 
   //

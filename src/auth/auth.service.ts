@@ -16,7 +16,7 @@ export class AuthService {
   REFRESH_TOKEN_NAME = 'refreshToken';
   COOKIE_OPTIONS = {
     httpOnly: true,
-    domain: 'localhost',
+    // domain: 'localhost',
     secure: true,
     sameSite: 'none' as 'none',
   };
