@@ -59,7 +59,8 @@ export class AuthService {
 
     if (!isValid) throw new UnauthorizedException('Неправильный пароль.');
 
-    return user;
+    // return user;
+    return this.userService.getProfile(user.id);
   }
 
   async getNewTokens(refreshToken: string) {
