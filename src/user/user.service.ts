@@ -44,6 +44,76 @@ export class UserService {
     });
   }
 
+  // async saveMovie(userId: string, movieId: number) {
+  //   // Проверяем, существует ли уже фильм
+  //   let movie = await this.prisma.movie.findUnique({
+  //     where: { id: movieId },
+  //   });
+
+  //   if (!movie) {
+  //     // Если фильма нет, создаем новый
+  //     movie = await this.prisma.movie.create({
+  //       data: { id: movieId },
+  //     });
+  //   }
+
+  //   // Пытаемся найти существующую связь между пользователем и фильмом
+  //   const existingUserMovie = await this.prisma.userMovie.findUnique({
+  //     where: {
+  //       userId_movieId: { userId: userId, movieId: movie.id },
+  //     },
+  //   });
+
+  //   // Если связь не найдена, создаем новую
+  //   if (!existingUserMovie) {
+  //     await this.prisma.userMovie.create({
+  //       data: {
+  //         userId: userId,
+  //         movieId: movie.id,
+  //       },
+  //     });
+  //   }
+
+  //   const updatedUser = await this.prisma.user.findUnique({
+  //     where: { id: userId },
+  //     include: {
+  //       savedMovies: {
+  //         orderBy: {
+  //           createdAt: 'desc',
+  //         },
+  //         include: {
+  //           movie: true,
+  //         },
+  //       },
+  //     },
+  //   });
+
+  //   return updatedUser;
+  // }
+
+  // async deleteMovie(userId: string, movieId: number) {
+  //   await this.prisma.userMovie.delete({
+  //     where: {
+  //       userId_movieId: { userId: userId, movieId: movieId },
+  //     },
+  //   });
+
+  //   const updatedUser = await this.prisma.user.findUnique({
+  //     where: { id: userId },
+  //     include: {
+  //       savedMovies: {
+  //         orderBy: {
+  //           createdAt: 'desc',
+  //         },
+  //         include: {
+  //           movie: true,
+  //         },
+  //       },
+  //     },
+  //   });
+
+  //   return updatedUser;
+  // }
   async saveMovie(userId: string, movieId: number) {
     // Проверяем, существует ли уже фильм
     let movie = await this.prisma.movie.findUnique({
@@ -72,6 +142,12 @@ export class UserService {
           movieId: movie.id,
         },
       });
+
+      // Явно обновляем поле updatedAt у пользователя
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { updatedAt: new Date() },
+      });
     }
 
     const updatedUser = await this.prisma.user.findUnique({
@@ -96,6 +172,12 @@ export class UserService {
       where: {
         userId_movieId: { userId: userId, movieId: movieId },
       },
+    });
+
+    // Явно обновляем поле updatedAt у пользователя
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { updatedAt: new Date() },
     });
 
     const updatedUser = await this.prisma.user.findUnique({
